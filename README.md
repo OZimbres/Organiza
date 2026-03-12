@@ -49,18 +49,24 @@ src/main/java/com/organiza/
 
 - Java 21 (JDK)
 
+Windows: configure JAVA_HOME to your JDK 21 installation (e.g., C:\\Program Files\\Java\\jdk-21) and add %JAVA_HOME%\\bin to PATH. Use .\\gradlew.bat on Windows.
+
 ### Build e execução
 
 ```bash
 # Compilar
 ./gradlew build
 
-# Executar a aplicação
+# Executar a aplicação (Linux/macOS)
 ./gradlew run
+# Executar a aplicação (Windows)
+./gradlew.bat run
 
 # Executar os testes
 ./gradlew test
 ```
+
+Note: The project uses a Gradle Java toolchain for Java 21. If gradle.properties contains org.gradle.java.home pointing to a platform-specific JDK path, remove or update it to match your system. Prefer relying on the Gradle toolchain.
 
 ## Banco de Dados
 
