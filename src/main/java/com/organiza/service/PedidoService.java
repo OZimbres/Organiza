@@ -58,7 +58,7 @@ public class PedidoService {
      * @throws IllegalArgumentException se a mesa não existir
      * @throws IllegalStateException    se a lista de itens estiver vazia
      */
-    public Pedido criarPedido(int mesaId, List<ItemPedido> itens) {
+    public Pedido criarPedido(int mesaId, String nomeCliente, List<ItemPedido> itens) {
         Mesa mesa = mesaRepository.findById(mesaId)
                 .orElseThrow(() -> new IllegalArgumentException("Mesa não encontrada: " + mesaId));
 
@@ -66,7 +66,11 @@ public class PedidoService {
             throw new IllegalStateException("Pedido deve conter ao menos um item");
         }
 
-        Pedido pedido = new Pedido(mesa.getId());
+        if (nomeCliente == null || nomeCliente.isBlank()) {
+            throw new IllegalArgumentException("Nome do cliente é obrigatório");
+        }
+
+        Pedido pedido = new Pedido(mesa.getId(), nomeCliente);
         itens.forEach(pedido::addItem);
 
         Pedido saved = pedidoRepository.save(pedido);

@@ -47,14 +47,15 @@ class PedidoServiceTest {
         Mesa mesa = service.listarMesas().getFirst();
 
         List<ItemPedido> itens = List.of(
-                new ItemPedido("Pão na chapa", 2),
-                new ItemPedido("Café", 1)
+                new ItemPedido("Pão na chapa", 2, 5.00),
+                new ItemPedido("Café", 1, 3.50)
         );
 
-        Pedido pedido = service.criarPedido(mesa.getId(), itens);
+        Pedido pedido = service.criarPedido(mesa.getId(), "João", itens);
 
         assertNotNull(pedido);
         assertTrue(pedido.getId() > 0);
+        assertEquals("João", pedido.getNomeCliente());
         assertEquals(StatusPedido.PENDENTE, pedido.getStatus());
         assertEquals(2, pedido.getItens().size());
 
@@ -66,7 +67,7 @@ class PedidoServiceTest {
     @Test
     void deveLancarExcecaoParaMesaInexistente() {
         assertThrows(IllegalArgumentException.class,
-                () -> service.criarPedido(999, List.of(new ItemPedido("Café", 1))));
+                () -> service.criarPedido(999, "João", List.of(new ItemPedido("Café", 1, 0.0))));
     }
 
     @Test
@@ -75,15 +76,24 @@ class PedidoServiceTest {
         Mesa mesa = service.listarMesas().getFirst();
 
         assertThrows(IllegalStateException.class,
-                () -> service.criarPedido(mesa.getId(), List.of()));
+                () -> service.criarPedido(mesa.getId(), "João", List.of()));
+    }
+
+    @Test
+    void deveLancarExcecaoParaNomeVazio() {
+        service.criarMesas(1);
+        Mesa mesa = service.listarMesas().getFirst();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.criarPedido(mesa.getId(), "  ", List.of(new ItemPedido("Café", 1, 0.0))));
     }
 
     @Test
     void deveAvancarStatusCompleto() {
         service.criarMesas(1);
         Mesa mesa = service.listarMesas().getFirst();
-        Pedido pedido = service.criarPedido(mesa.getId(),
-                List.of(new ItemPedido("Café", 1)));
+        Pedido pedido = service.criarPedido(mesa.getId(), "Ana",
+                List.of(new ItemPedido("Café", 1, 3.00)));
 
         // PENDENTE → EM_PREPARO
         Pedido p1 = service.avancarStatus(pedido.getId());
@@ -110,8 +120,8 @@ class PedidoServiceTest {
     void deveLancarExcecaoAoAvancarPedidoPago() {
         service.criarMesas(1);
         Mesa mesa = service.listarMesas().getFirst();
-        Pedido pedido = service.criarPedido(mesa.getId(),
-                List.of(new ItemPedido("Café", 1)));
+        Pedido pedido = service.criarPedido(mesa.getId(), "Carlos",
+                List.of(new ItemPedido("Café", 1, 0.0)));
 
         // Avança até PAGO
         service.avancarStatus(pedido.getId());
@@ -129,10 +139,10 @@ class PedidoServiceTest {
         Mesa mesa = service.listarMesas().getFirst();
 
         // Cria dois pedidos
-        Pedido p1 = service.criarPedido(mesa.getId(),
-                List.of(new ItemPedido("Café", 1)));
-        Pedido p2 = service.criarPedido(mesa.getId(),
-                List.of(new ItemPedido("Suco", 1)));
+        Pedido p1 = service.criarPedido(mesa.getId(), "Maria",
+                List.of(new ItemPedido("Café", 1, 0.0)));
+        Pedido p2 = service.criarPedido(mesa.getId(), "Pedro",
+                List.of(new ItemPedido("Suco", 1, 0.0)));
 
         // Paga apenas o primeiro
         service.avancarStatus(p1.getId()); // EM_PREPARO
@@ -150,10 +160,10 @@ class PedidoServiceTest {
         service.criarMesas(2);
         List<Mesa> mesas = service.listarMesas();
 
-        service.criarPedido(mesas.get(0).getId(),
-                List.of(new ItemPedido("Café", 1)));
-        Pedido p2 = service.criarPedido(mesas.get(1).getId(),
-                List.of(new ItemPedido("Suco", 1)));
+        service.criarPedido(mesas.get(0).getId(), "Ana",
+                List.of(new ItemPedido("Café", 1, 0.0)));
+        Pedido p2 = service.criarPedido(mesas.get(1).getId(), "Bruno",
+                List.of(new ItemPedido("Suco", 1, 0.0)));
 
         // Avança p2 para EM_PREPARO
         service.avancarStatus(p2.getId());
@@ -166,8 +176,8 @@ class PedidoServiceTest {
     void deveListarPedidosAtivos() {
         service.criarMesas(1);
         Mesa mesa = service.listarMesas().getFirst();
-        Pedido pedido = service.criarPedido(mesa.getId(),
-                List.of(new ItemPedido("Café", 1)));
+        Pedido pedido = service.criarPedido(mesa.getId(), "Luís",
+                List.of(new ItemPedido("Café", 1, 0.0)));
 
         List<Pedido> ativos = service.listarPedidosAtivos();
         assertEquals(1, ativos.size());

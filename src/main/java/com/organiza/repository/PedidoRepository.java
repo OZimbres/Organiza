@@ -28,8 +28,8 @@ public class PedidoRepository {
      * Salva um pedido e seus itens no banco de dados.
      */
     public Pedido save(Pedido pedido) {
-        String sqlPedido = "INSERT INTO pedidos (mesa_id, status, data_hora) VALUES (?, ?, ?)";
-        String sqlItem = "INSERT INTO itens_pedido (pedido_id, produto, quantidade) VALUES (?, ?, ?)";
+        String sqlPedido = "INSERT INTO pedidos (mesa_id, nome_cliente, status, data_hora) VALUES (?, ?, ?, ?)";
+        String sqlItem = "INSERT INTO itens_pedido (pedido_id, produto, quantidade, preco) VALUES (?, ?, ?, ?)";
 
         try {
             Connection conn = databaseConnection.getConnection();
@@ -38,8 +38,9 @@ public class PedidoRepository {
                 // Insere o pedido
                 try (PreparedStatement pstmt = conn.prepareStatement(sqlPedido, Statement.RETURN_GENERATED_KEYS)) {
                     pstmt.setInt(1, pedido.getMesaId());
-                    pstmt.setString(2, pedido.getStatus().name());
-                    pstmt.setString(3, pedido.getDataHora().format(FORMATTER));
+                    pstmt.setString(2, pedido.getNomeCliente() != null ? pedido.getNomeCliente() : "Cliente");
+                    pstmt.setString(3, pedido.getStatus().name());
+                    pstmt.setString(4, pedido.getDataHora().format(FORMATTER));
                     pstmt.executeUpdate();
 
                     try (ResultSet keys = pstmt.getGeneratedKeys()) {
@@ -56,6 +57,7 @@ public class PedidoRepository {
                         pstmt.setInt(1, pedido.getId());
                         pstmt.setString(2, item.getProduto());
                         pstmt.setInt(3, item.getQuantidade());
+                        pstmt.setDouble(4, item.getPreco());
                         pstmt.executeUpdate();
 
                         try (ResultSet keys = pstmt.getGeneratedKeys()) {
@@ -83,7 +85,7 @@ public class PedidoRepository {
      * Busca um pedido pelo ID, incluindo seus itens.
      */
     public Optional<Pedido> findById(int id) {
-        String sql = "SELECT id, mesa_id, status, data_hora FROM pedidos WHERE id = ?";
+        String sql = "SELECT id, mesa_id, nome_cliente, status, data_hora FROM pedidos WHERE id = ?";
         try {
             Connection conn = databaseConnection.getConnection();
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -106,7 +108,7 @@ public class PedidoRepository {
      * Lista todos os pedidos de uma mesa, incluindo itens.
      */
     public List<Pedido> findByMesaId(int mesaId) {
-        String sql = "SELECT id, mesa_id, status, data_hora FROM pedidos WHERE mesa_id = ? ORDER BY data_hora DESC";
+        String sql = "SELECT id, mesa_id, nome_cliente, status, data_hora FROM pedidos WHERE mesa_id = ? ORDER BY data_hora DESC";
         return findPedidos(sql, mesaId);
     }
 
@@ -114,7 +116,7 @@ public class PedidoRepository {
      * Lista pedidos por status, incluindo itens.
      */
     public List<Pedido> findByStatus(StatusPedido status) {
-        String sql = "SELECT id, mesa_id, status, data_hora FROM pedidos WHERE status = ? ORDER BY data_hora";
+        String sql = "SELECT id, mesa_id, nome_cliente, status, data_hora FROM pedidos WHERE status = ? ORDER BY data_hora";
         return findPedidos(sql, status.name());
     }
 
@@ -122,7 +124,7 @@ public class PedidoRepository {
      * Lista todos os pedidos ativos (não pagos), incluindo itens.
      */
     public List<Pedido> findAllActive() {
-        String sql = "SELECT id, mesa_id, status, data_hora FROM pedidos WHERE status != 'PAGO' ORDER BY data_hora";
+        String sql = "SELECT id, mesa_id, nome_cliente, status, data_hora FROM pedidos WHERE status != 'PAGO' ORDER BY data_hora";
         List<Pedido> pedidos = new ArrayList<>();
         try {
             Connection conn = databaseConnection.getConnection();
@@ -192,7 +194,7 @@ public class PedidoRepository {
      * Busca os itens de um pedido pelo ID do pedido.
      */
     public List<ItemPedido> findItensByPedidoId(int pedidoId) {
-        String sql = "SELECT id, pedido_id, produto, quantidade FROM itens_pedido WHERE pedido_id = ?";
+        String sql = "SELECT id, pedido_id, produto, quantidade, preco FROM itens_pedido WHERE pedido_id = ?";
         List<ItemPedido> itens = new ArrayList<>();
         try {
             Connection conn = databaseConnection.getConnection();
@@ -204,7 +206,8 @@ public class PedidoRepository {
                                 rs.getInt("id"),
                                 rs.getInt("pedido_id"),
                                 rs.getString("produto"),
-                                rs.getInt("quantidade")
+                                rs.getInt("quantidade"),
+                                rs.getDouble("preco")
                         ));
                     }
                 }
@@ -243,6 +246,7 @@ public class PedidoRepository {
         return new Pedido(
                 rs.getInt("id"),
                 rs.getInt("mesa_id"),
+                rs.getString("nome_cliente"),
                 StatusPedido.valueOf(rs.getString("status")),
                 LocalDateTime.parse(rs.getString("data_hora"), FORMATTER)
         );

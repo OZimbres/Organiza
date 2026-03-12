@@ -11,6 +11,7 @@ import java.util.Objects;
 public class Pedido {
     private int id;
     private int mesaId;
+    private String nomeCliente;
     private StatusPedido status;
     private LocalDateTime dataHora;
     private List<ItemPedido> itens;
@@ -21,16 +22,18 @@ public class Pedido {
         this.itens = new ArrayList<>();
     }
 
-    public Pedido(int mesaId) {
+    public Pedido(int mesaId, String nomeCliente) {
         this.mesaId = mesaId;
+        this.nomeCliente = nomeCliente;
         this.status = StatusPedido.PENDENTE;
         this.dataHora = LocalDateTime.now();
         this.itens = new ArrayList<>();
     }
 
-    public Pedido(int id, int mesaId, StatusPedido status, LocalDateTime dataHora) {
+    public Pedido(int id, int mesaId, String nomeCliente, StatusPedido status, LocalDateTime dataHora) {
         this.id = id;
         this.mesaId = mesaId;
+        this.nomeCliente = nomeCliente;
         this.status = status;
         this.dataHora = dataHora;
         this.itens = new ArrayList<>();
@@ -50,6 +53,18 @@ public class Pedido {
 
     public void setMesaId(int mesaId) {
         this.mesaId = mesaId;
+    }
+
+    public String getNomeCliente() {
+        return nomeCliente;
+    }
+
+    public void setNomeCliente(String nomeCliente) {
+        this.nomeCliente = nomeCliente;
+    }
+
+    public double getTotal() {
+        return itens.stream().mapToDouble(ItemPedido::getSubtotal).sum();
     }
 
     public StatusPedido getStatus() {
@@ -95,6 +110,6 @@ public class Pedido {
 
     @Override
     public String toString() {
-        return "Pedido #" + id + " - Mesa " + mesaId + " - " + status.getLabel();
+        return "Pedido #" + id + " - Mesa " + mesaId + " (" + nomeCliente + ") - " + status.getLabel();
     }
 }

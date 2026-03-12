@@ -51,6 +51,7 @@ public class DatabaseConnection {
                 CREATE TABLE IF NOT EXISTS pedidos (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     mesa_id INTEGER NOT NULL,
+                    nome_cliente TEXT NOT NULL DEFAULT 'Cliente',
                     status TEXT NOT NULL DEFAULT 'PENDENTE',
                     data_hora TEXT NOT NULL,
                     FOREIGN KEY (mesa_id) REFERENCES mesas(id)
@@ -63,6 +64,7 @@ public class DatabaseConnection {
                     pedido_id INTEGER NOT NULL,
                     produto TEXT NOT NULL,
                     quantidade INTEGER NOT NULL DEFAULT 1,
+                    preco REAL NOT NULL DEFAULT 0.0,
                     FOREIGN KEY (pedido_id) REFERENCES pedidos(id)
                 )
                 """;
@@ -71,8 +73,22 @@ public class DatabaseConnection {
             stmt.execute(createMesas);
             stmt.execute(createPedidos);
             stmt.execute(createItensPedido);
+            runMigrations(stmt);
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao inicializar banco de dados", e);
+        }
+    }
+
+    private void runMigrations(Statement stmt) {
+        tryAlter(stmt, "ALTER TABLE pedidos ADD COLUMN nome_cliente TEXT NOT NULL DEFAULT 'Cliente'");
+        tryAlter(stmt, "ALTER TABLE itens_pedido ADD COLUMN preco REAL NOT NULL DEFAULT 0.0");
+    }
+
+    private void tryAlter(Statement stmt, String sql) {
+        try {
+            stmt.execute(sql);
+        } catch (SQLException ignored) {
+            // Column already exists — safe to ignore
         }
     }
 
