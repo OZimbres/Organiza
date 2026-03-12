@@ -1,8 +1,12 @@
 package com.organiza.ui;
 
+import com.organiza.model.Cliente;
 import com.organiza.model.ItemPedido;
 import com.organiza.model.Mesa;
+import com.organiza.model.Produto;
+import com.organiza.service.ClienteService;
 import com.organiza.service.PedidoService;
+import com.organiza.service.ProdutoService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -13,12 +17,13 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Formulário de novo pedido — exibido como aba na janela principal.
+ * Formulário de novo pedido — exibido como painel central na janela principal.
  */
 public class PedidoScreen {
 
@@ -27,24 +32,30 @@ public class PedidoScreen {
     private static final String TEXT_DIM = "#8888AA";
 
     private final PedidoService pedidoService;
+    private final ClienteService clienteService;
+    private final ProdutoService produtoService;
     private final Runnable onSaved;
     private final ObservableList<ItemPedido> itensObservable = FXCollections.observableArrayList();
 
     // Form fields kept as instance vars so resetForm() can clear them
-    private TextField txtNome;
-    private TextField txtProduto;
-    private TextField txtPreco;
-    private Spinner<Integer> spinnerQtd;
-    private Label lblTotal;
+    private ComboBox<Cliente>  comboCliente;
+    private ComboBox<Produto>  comboProduto;
+    private Spinner<Integer>   spinnerQtd;
+    private Label              lblTotal;
 
-    public PedidoScreen(PedidoService pedidoService, Runnable onSaved) {
-        this.pedidoService = pedidoService;
+    public PedidoScreen(PedidoService pedidoService,
+                        ClienteService clienteService,
+                        ProdutoService produtoService,
+                        Runnable onSaved) {
+        this.pedidoService  = pedidoService;
+        this.clienteService = clienteService;
+        this.produtoService = produtoService;
         this.onSaved = onSaved;
     }
 
     public Node createPane() {
         Label titulo = new Label("＋  Novo Pedido");
-        titulo.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        titulo.setFont(Font.font("Arial", FontWeight.BOLD, 22));
         titulo.setTextFill(Color.web(ACCENT));
 
         // ---- Mesa ----
@@ -54,41 +65,65 @@ public class PedidoScreen {
         if (!comboMesa.getItems().isEmpty()) comboMesa.getSelectionModel().selectFirst();
         styleCombo(comboMesa);
 
-        // ---- Nome do cliente ----
-        txtNome = darkField("Ex: João da Silva");
+        // ---- Cliente picker ----
+        comboCliente = new ComboBox<>();
+        comboCliente.setMaxWidth(Double.MAX_VALUE);
+        styleCombo(comboCliente);
+        recarregarClientes();
 
-        VBox clienteBox = new VBox(5, fieldLabel("Nome do Cliente"), txtNome);
-        HBox.setHgrow(clienteBox, Priority.ALWAYS);
-        txtNome.setMaxWidth(Double.MAX_VALUE);
+        Button btnNovoCliente = miniButton("＋");
+        btnNovoCliente.setTooltip(new Tooltip("Cadastrar novo cliente"));
+        btnNovoCliente.setOnAction(e -> {
+            Stage owner = (Stage) btnNovoCliente.getScene().getWindow();
+            new ClienteScreen(clienteService).show(owner);
+            // Refresh picker after the window is opened (user will add and come back)
+            btnNovoCliente.getScene().getWindow().focusedProperty().addListener(
+                (obs, wasFocused, isFocused) -> { if (isFocused) recarregarClientes(); });
+        });
 
-        HBox topRow = new HBox(20, new VBox(5, fieldLabel("Mesa"), comboMesa), clienteBox);
-        topRow.setAlignment(Pos.BOTTOM_LEFT);
+        HBox clienteRow = new HBox(6, comboCliente, btnNovoCliente);
+        clienteRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(comboCliente, Priority.ALWAYS);
 
-        // ---- Item entry ----
-        txtProduto = darkField("Ex: Pão na chapa");
-        txtProduto.setPrefWidth(220);
+        // ---- Produto picker ----
+        comboProduto = new ComboBox<>();
+        comboProduto.setMaxWidth(Double.MAX_VALUE);
+        styleCombo(comboProduto);
+        recarregarProdutos();
 
+        Button btnNovoProduto = miniButton("＋");
+        btnNovoProduto.setTooltip(new Tooltip("Cadastrar novo produto"));
+        btnNovoProduto.setOnAction(e -> {
+            Stage owner = (Stage) btnNovoProduto.getScene().getWindow();
+            new ProdutoScreen(produtoService).show(owner);
+            btnNovoProduto.getScene().getWindow().focusedProperty().addListener(
+                (obs, wasFocused, isFocused) -> { if (isFocused) recarregarProdutos(); });
+        });
+
+        HBox produtoRow = new HBox(6, comboProduto, btnNovoProduto);
+        produtoRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(comboProduto, Priority.ALWAYS);
+
+        // ---- Qty + Add ----
         spinnerQtd = new Spinner<>(1, 99, 1);
-        spinnerQtd.setPrefWidth(75);
-        spinnerQtd.setStyle("-fx-font-size: 14; -fx-background-color: #0D1220; -fx-text-fill: white;");
+        spinnerQtd.setPrefWidth(70);
+        spinnerQtd.setStyle("-fx-font-size: 13; -fx-background-color: #0D1220; -fx-text-fill: white;");
 
-        txtPreco = darkField("0,00");
-        txtPreco.setPrefWidth(90);
+        Button btnAdicionar = actionButton("＋  Add", "#27AE60", "#1E8449");
 
-        Button btnAdicionar = actionButton("＋ Adicionar", "#27AE60", "#1E8449");
-
-        HBox itemRow = new HBox(12,
-                new VBox(5, fieldLabel("Produto"), txtProduto),
-                new VBox(5, fieldLabel("Qtd"), spinnerQtd),
-                new VBox(5, fieldLabel("Preço Unit. (R$)"), txtPreco),
-                new VBox(5, new Label(" "), btnAdicionar)
+        HBox itemRow = new HBox(10,
+                new VBox(4, fieldLabel("Produto"), produtoRow),
+                new VBox(4, fieldLabel("Qtd"), spinnerQtd),
+                new VBox(4, new Label(" "), btnAdicionar)
         );
         itemRow.setAlignment(Pos.BOTTOM_LEFT);
+        HBox.setHgrow(itemRow.getChildren().get(0), Priority.ALWAYS);
 
         // ---- Item list ----
         ListView<ItemPedido> listItens = new ListView<>(itensObservable);
-        listItens.setPrefHeight(180);
-        listItens.setStyle("-fx-background-color: #0D1220; -fx-background-radius: 8; -fx-border-color: #334; -fx-border-radius: 8;");
+        listItens.setPrefHeight(150);
+        listItens.setStyle("-fx-background-color: #0D1220; -fx-background-radius: 8;"
+                + "-fx-border-color: #334; -fx-border-radius: 8;");
         listItens.setCellFactory(lv -> new ListCell<>() {
             @Override
             protected void updateItem(ItemPedido item, boolean empty) {
@@ -99,14 +134,15 @@ public class PedidoScreen {
                 } else {
                     String priceStr = item.getPreco() > 0
                             ? String.format("  —  R$ %.2f", item.getSubtotal()) : "";
-                    setText(String.format("%dx  %s%s", item.getQuantidade(), item.getProduto(), priceStr));
-                    setFont(Font.font("Arial", 14));
+                    setText(String.format("%dx  %s%s",
+                            item.getQuantidade(), item.getProduto(), priceStr));
+                    setFont(Font.font("Arial", 13));
                 }
             }
         });
 
         lblTotal = new Label("Total: R$ 0,00");
-        lblTotal.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        lblTotal.setFont(Font.font("Arial", FontWeight.BOLD, 15));
         lblTotal.setTextFill(Color.web(ACCENT));
 
         Runnable updateTotal = () -> {
@@ -120,40 +156,33 @@ public class PedidoScreen {
             if (sel != null) { itensObservable.remove(sel); updateTotal.run(); }
         });
 
-        HBox listActions = new HBox(12, btnRemover, new Region(), lblTotal);
+        HBox listActions = new HBox(10, btnRemover, new Region(), lblTotal);
         HBox.setHgrow(listActions.getChildren().get(1), Priority.ALWAYS);
         listActions.setAlignment(Pos.CENTER_LEFT);
 
         // ---- Add item action ----
         btnAdicionar.setOnAction(e -> {
-            String produto = txtProduto.getText().trim();
-            if (produto.isEmpty()) return;
-            double preco = 0;
-            try { preco = Double.parseDouble(txtPreco.getText().replace(",", ".").trim()); }
-            catch (NumberFormatException ignored) {}
-            itensObservable.add(new ItemPedido(produto, spinnerQtd.getValue(), preco));
-            txtProduto.clear();
-            txtPreco.setText("0,00");
+            Produto p = comboProduto.getSelectionModel().getSelectedItem();
+            if (p == null) { warn("Selecione um produto."); return; }
+            itensObservable.add(new ItemPedido(p.getNome(), spinnerQtd.getValue(), p.getPreco()));
             spinnerQtd.getValueFactory().setValue(1);
-            txtProduto.requestFocus();
             updateTotal.run();
         });
-        txtProduto.setOnAction(e -> btnAdicionar.fire());
 
         // ---- Save ----
         Button btnSalvar = actionButton("💾  Salvar Pedido", "#3498DB", "#2271A8");
-        btnSalvar.setFont(Font.font("Arial", FontWeight.BOLD, 16));
-        btnSalvar.setPrefWidth(Double.MAX_VALUE);
+        btnSalvar.setFont(Font.font("Arial", FontWeight.BOLD, 15));
+        btnSalvar.setMaxWidth(Double.MAX_VALUE);
         btnSalvar.setOnAction(e -> {
-            String nome = txtNome.getText().trim();
-            if (nome.isEmpty()) { warn("Informe o nome do cliente."); return; }
+            Cliente cliente = comboCliente.getSelectionModel().getSelectedItem();
+            if (cliente == null) { warn("Selecione um cliente."); return; }
             if (itensObservable.isEmpty()) { warn("Adicione ao menos um item."); return; }
             int idx = comboMesa.getSelectionModel().getSelectedIndex();
             if (idx < 0) { warn("Selecione uma mesa."); return; }
-
             Mesa mesaSelecionada = mesas.get(idx);
             try {
-                pedidoService.criarPedido(mesaSelecionada.getId(), nome, new ArrayList<>(itensObservable));
+                pedidoService.criarPedido(mesaSelecionada.getId(), cliente.getNome(),
+                        new ArrayList<>(itensObservable));
                 resetForm();
                 onSaved.run();
             } catch (Exception ex) {
@@ -163,10 +192,11 @@ public class PedidoScreen {
             }
         });
 
-        VBox root = new VBox(16,
+        VBox root = new VBox(12,
                 titulo,
                 separator(),
-                topRow,
+                new HBox(20, new VBox(4, fieldLabel("Mesa"), comboMesa),
+                         new VBox(4, fieldLabel("Cliente"), clienteRow)),
                 separator(),
                 sectionLabel("Itens do Pedido"),
                 itemRow,
@@ -175,21 +205,49 @@ public class PedidoScreen {
                 separator(),
                 btnSalvar
         );
-        root.setPadding(new Insets(24));
+        ((HBox) root.getChildren().get(2)).setAlignment(Pos.BOTTOM_LEFT);
+        HBox.setHgrow(((HBox) root.getChildren().get(2)).getChildren().get(1), Priority.ALWAYS);
+        root.setPadding(new Insets(18));
         root.setStyle("-fx-background-color: " + BG_APP + ";");
         return root;
     }
 
     public void resetForm() {
         itensObservable.clear();
-        if (txtNome != null)     txtNome.clear();
-        if (txtProduto != null)  txtProduto.clear();
-        if (txtPreco != null)    txtPreco.setText("0,00");
-        if (spinnerQtd != null)  spinnerQtd.getValueFactory().setValue(1);
-        if (lblTotal != null)    lblTotal.setText("Total: R$ 0,00");
+        if (comboCliente != null)  comboCliente.getSelectionModel().clearSelection();
+        if (comboProduto != null)  comboProduto.getSelectionModel().clearSelection();
+        if (spinnerQtd != null)    spinnerQtd.getValueFactory().setValue(1);
+        if (lblTotal != null)      lblTotal.setText("Total: R$ 0,00");
     }
 
-    // ---- Helpers ----
+    public void refreshPickers() {
+        recarregarClientes();
+        recarregarProdutos();
+    }
+
+    private void recarregarClientes() {
+        if (comboCliente == null) return;
+        Cliente prev = comboCliente.getSelectionModel().getSelectedItem();
+        comboCliente.getItems().setAll(clienteService.listar());
+        if (prev != null) {
+            comboCliente.getItems().stream()
+                .filter(c -> c.getId() == prev.getId()).findFirst()
+                .ifPresent(comboCliente.getSelectionModel()::select);
+        }
+    }
+
+    private void recarregarProdutos() {
+        if (comboProduto == null) return;
+        Produto prev = comboProduto.getSelectionModel().getSelectedItem();
+        comboProduto.getItems().setAll(produtoService.listar());
+        if (prev != null) {
+            comboProduto.getItems().stream()
+                .filter(p -> p.getId() == prev.getId()).findFirst()
+                .ifPresent(comboProduto.getSelectionModel()::select);
+        }
+    }
+
+    // ---- helpers ----
 
     private Label fieldLabel(String text) {
         Label l = new Label(text);
@@ -200,35 +258,35 @@ public class PedidoScreen {
 
     private Label sectionLabel(String text) {
         Label l = new Label(text);
-        l.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        l.setFont(Font.font("Arial", FontWeight.BOLD, 13));
         l.setTextFill(Color.web(ACCENT));
         return l;
     }
 
-    private TextField darkField(String prompt) {
-        TextField tf = new TextField();
-        tf.setPromptText(prompt);
-        tf.setFont(Font.font("Arial", 14));
-        tf.setStyle("-fx-background-color: #0D1220; -fx-text-fill: white;"
-                + "-fx-prompt-text-fill: #555577; -fx-background-radius: 6;"
-                + "-fx-border-color: #334; -fx-border-radius: 6; -fx-padding: 7 10;");
-        return tf;
-    }
-
-    private void styleCombo(ComboBox<String> cb) {
+    private void styleCombo(ComboBox<?> cb) {
         cb.setStyle("-fx-background-color: #0D1220; -fx-text-fill: white;"
-                + "-fx-font-size: 14; -fx-background-radius: 6;");
+                + "-fx-font-size: 13; -fx-background-radius: 6;");
     }
 
     private Button actionButton(String text, String bg, String hover) {
         Button btn = new Button(text);
-        btn.setFont(Font.font("Arial", FontWeight.BOLD, 13));
+        btn.setFont(Font.font("Arial", FontWeight.BOLD, 12));
         btn.setTextFill(Color.WHITE);
-        btn.setStyle("-fx-background-color: " + bg + "; -fx-background-radius: 7; -fx-padding: 9 18;");
+        btn.setStyle("-fx-background-color: " + bg + "; -fx-background-radius: 7; -fx-padding: 8 14;");
         btn.setOnMouseEntered(e -> btn.setStyle(
-                "-fx-background-color: " + hover + "; -fx-background-radius: 7; -fx-padding: 9 18;"));
+                "-fx-background-color: " + hover + "; -fx-background-radius: 7; -fx-padding: 8 14;"));
         btn.setOnMouseExited(e -> btn.setStyle(
-                "-fx-background-color: " + bg + "; -fx-background-radius: 7; -fx-padding: 9 18;"));
+                "-fx-background-color: " + bg + "; -fx-background-radius: 7; -fx-padding: 8 14;"));
+        return btn;
+    }
+
+    private Button miniButton(String text) {
+        Button btn = new Button(text);
+        btn.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        btn.setTextFill(Color.web(ACCENT));
+        btn.setPrefWidth(32);
+        btn.setStyle("-fx-background-color: #0D1220; -fx-background-radius: 6;"
+                + "-fx-border-color: " + ACCENT + "88; -fx-border-radius: 6; -fx-padding: 5 8;");
         return btn;
     }
 

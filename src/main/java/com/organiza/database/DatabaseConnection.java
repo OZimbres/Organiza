@@ -69,13 +69,34 @@ public class DatabaseConnection {
                 )
                 """;
 
+        String createClientes = """
+                CREATE TABLE IF NOT EXISTS clientes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    telefone TEXT
+                )
+                """;
+
+        String createProdutos = """
+                CREATE TABLE IF NOT EXISTS produtos (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    preco REAL NOT NULL DEFAULT 0.0,
+                    categoria TEXT
+                )
+                """;
+
         try (Statement stmt = getConnection().createStatement()) {
             stmt.execute(createMesas);
             stmt.execute(createPedidos);
             stmt.execute(createItensPedido);
+            stmt.execute(createClientes);
+            stmt.execute(createProdutos);
             runMigrations(stmt);
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao inicializar banco de dados", e);
+            // Log a clear error for users and rethrow with actionable guidance
+            System.err.println("Erro ao inicializar banco de dados: " + e.getMessage());
+            throw new RuntimeException("Erro ao inicializar banco de dados. Verifique permissões, caminho do arquivo padaria.db e se outro processo não o está bloqueando.", e);
         }
     }
 

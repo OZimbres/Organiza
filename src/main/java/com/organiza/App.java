@@ -1,9 +1,13 @@
 package com.organiza;
 
 import com.organiza.database.DatabaseConnection;
+import com.organiza.repository.ClienteRepository;
 import com.organiza.repository.MesaRepository;
 import com.organiza.repository.PedidoRepository;
+import com.organiza.repository.ProdutoRepository;
+import com.organiza.service.ClienteService;
 import com.organiza.service.PedidoService;
+import com.organiza.service.ProdutoService;
 import com.organiza.ui.AppShell;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -19,22 +23,38 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // Inicializa banco de dados
         DatabaseConnection db = new DatabaseConnection();
-        db.initializeDatabase();
+        try {
+            db.initializeDatabase();
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            javafx.application.Platform.runLater(() -> {
+                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                        javafx.scene.control.Alert.AlertType.ERROR);
+                alert.setTitle("Erro");
+                alert.setHeaderText("Falha ao inicializar o banco de dados");
+                alert.setContentText(e.getMessage());
+                alert.showAndWait();
+                javafx.application.Platform.exit();
+                System.exit(1);
+            });
+            return;
+        }
 
-        // Inicializa repositórios e serviço
-        MesaRepository mesaRepository = new MesaRepository(db);
-        PedidoRepository pedidoRepository = new PedidoRepository(db);
-        PedidoService pedidoService = new PedidoService(mesaRepository, pedidoRepository);
+        MesaRepository    mesaRepo    = new MesaRepository(db);
+        PedidoRepository  pedidoRepo  = new PedidoRepository(db);
+        ClienteRepository clienteRepo = new ClienteRepository(db);
+        ProdutoRepository produtoRepo = new ProdutoRepository(db);
 
-        // Cria mesas iniciais
+        PedidoService  pedidoService  = new PedidoService(mesaRepo, pedidoRepo);
+        ClienteService clienteService = new ClienteService(clienteRepo);
+        ProdutoService produtoService = new ProdutoService(produtoRepo);
+
         pedidoService.criarMesas(TOTAL_MESAS);
 
-        // Monta a shell com abas unificadas
-        AppShell appShell = new AppShell(pedidoService);
+        AppShell appShell = new AppShell(pedidoService, clienteService, produtoService);
         primaryStage.setTitle("Organiza - Gestão de Pedidos");
-        primaryStage.setScene(appShell.createScene());
+        primaryStage.setScene(appShell.createScene(primaryStage));
         primaryStage.show();
     }
 
