@@ -1,12 +1,12 @@
 package com.organiza.ui;
 
-import com.organiza.model.Cliente;
-import com.organiza.model.ItemPedido;
-import com.organiza.model.Mesa;
-import com.organiza.model.Produto;
-import com.organiza.service.ClienteService;
-import com.organiza.service.PedidoService;
-import com.organiza.service.ProdutoService;
+import com.organiza.domain.entity.Cliente;
+import com.organiza.domain.entity.ItemPedido;
+import com.organiza.domain.entity.Mesa;
+import com.organiza.domain.entity.Produto;
+import com.organiza.application.usecase.ClienteService;
+import com.organiza.application.usecase.PedidoService;
+import com.organiza.application.usecase.ProdutoService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;

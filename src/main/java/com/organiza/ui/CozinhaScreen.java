@@ -1,9 +1,9 @@
 package com.organiza.ui;
 
-import com.organiza.model.ItemPedido;
-import com.organiza.model.Pedido;
-import com.organiza.model.StatusPedido;
-import com.organiza.service.PedidoService;
+import com.organiza.domain.entity.ItemPedido;
+import com.organiza.domain.entity.Pedido;
+import com.organiza.domain.enums.StatusPedido;
+import com.organiza.application.usecase.PedidoService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
