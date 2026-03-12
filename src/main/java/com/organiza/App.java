@@ -4,7 +4,7 @@ import com.organiza.database.DatabaseConnection;
 import com.organiza.repository.MesaRepository;
 import com.organiza.repository.PedidoRepository;
 import com.organiza.service.PedidoService;
-import com.organiza.ui.MainScreen;
+import com.organiza.ui.AppShell;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -29,10 +29,10 @@ public class App extends Application {
         // Cria mesas iniciais
         pedidoService.criarMesas(TOTAL_MESAS);
 
-        // Monta a tela principal
-        MainScreen mainScreen = new MainScreen(pedidoService, primaryStage);
+        // Monta a shell com abas unificadas
+        AppShell appShell = new AppShell(pedidoService);
         primaryStage.setTitle("Organiza - Gestão de Pedidos");
-        primaryStage.setScene(mainScreen.createScene());
+        primaryStage.setScene(appShell.createScene());
         primaryStage.show();
     }
 

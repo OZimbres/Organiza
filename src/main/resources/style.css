@@ -1,0 +1,75 @@
+/* ---- Tab Pane dark theme ---- */
+
+.tab-pane {
+    -fx-background-color: #1C1C2E;
+}
+
+.tab-pane .tab-header-area {
+    -fx-background-color: #16213E;
+    -fx-padding: 6 0 0 12;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: #16213E;
+}
+
+.tab-pane .tab {
+    -fx-background-color: #0D1220;
+    -fx-background-radius: 8 8 0 0;
+    -fx-padding: 8 22;
+    -fx-border-color: transparent;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: #1C1C2E;
+}
+
+.tab-pane .tab .tab-label {
+    -fx-text-fill: #8888AA;
+    -fx-font-size: 14px;
+    -fx-font-family: Arial;
+    -fx-font-weight: bold;
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #E8A838;
+}
+
+.tab-pane .tab:hover .tab-label {
+    -fx-text-fill: #CCCCDD;
+}
+
+.tab-pane > .tab-content-area {
+    -fx-background-color: #1C1C2E;
+    -fx-padding: 0;
+}
+
+/* ---- ScrollPane dark track ---- */
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:vertical .thumb,
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: #334466;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar:vertical .track,
+.scroll-bar:horizontal .track {
+    -fx-background-color: #16213E;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: #16213E;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: #555577;
+}
