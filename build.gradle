@@ -24,6 +24,8 @@ javafx {
 
 dependencies {
     implementation 'org.xerial:sqlite-jdbc:3.45.1.0'
+    // Provide a simple SLF4J binding so runtime logging works and avoids the NOP warning
+    implementation 'org.slf4j:slf4j-simple:1.7.36'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
