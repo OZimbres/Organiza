@@ -83,3 +83,7 @@ O sistema utiliza SQLite com um arquivo local `padaria.db`. As tabelas são cria
 3. A cozinha visualiza os pedidos pendentes e marca como "em preparo" ou "pronto"
 4. O garçom verifica no dashboard que a mesa está com pedido pronto e entrega
 5. Após pagamento, o pedido é marcado como pago e a mesa é liberada
+
+## Running in IntelliJ
+If IntelliJ reports 'JavaFX runtime components are missing', use the 'Run via Gradle' run configuration (File: .idea/runConfigurations/Run via Gradle.xml) or enable 'Delegate IDE build/run actions to Gradle' in Settings > Build Tools > Gradle. Running via Gradle ensures JavaFX dependencies and the correct toolchain are used.
+
