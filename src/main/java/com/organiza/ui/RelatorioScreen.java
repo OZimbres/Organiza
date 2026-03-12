@@ -103,13 +103,7 @@ public class RelatorioScreen {
     }
 
     Report gerarRelatorio() {
-        return new Report(
-                reportsUseCase.calcularReceitaTotal(),
-                reportsUseCase.contarPedidosPorStatus(),
-                reportsUseCase.itensMaisVendidos(),
-                reportsUseCase.estatisticasReceita(),
-                reportsUseCase.contarPedidosAtivos()
-        );
+        return reportsUseCase.gerarRelatorio();
     }
 
     private HBox criarResumoCards(Report report) {
