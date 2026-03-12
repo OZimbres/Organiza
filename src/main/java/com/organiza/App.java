@@ -8,6 +8,8 @@ import com.organiza.ui.AppShell;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
+import java.awt.GraphicsEnvironment;
+
 /**
  * Classe principal da aplicação JavaFX.
  */
@@ -37,6 +39,37 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
+        // Check Java version (require >= 21)
+        String javaVersion = System.getProperty("java.version");
+        int major = parseMajorVersion(javaVersion);
+        if (major < 21) {
+            System.err.println("ERROR: Organiza requires Java 21 or newer. Detected: " + javaVersion);
+            System.exit(2);
+        }
+
+        // Check for headless environment (JavaFX requires a display)
+        if (GraphicsEnvironment.isHeadless()) {
+            System.err.println("ERROR: No graphical display detected. JavaFX applications require a desktop session.");
+            System.exit(3);
+        }
+
         launch(args);
+    }
+
+    private static int parseMajorVersion(String version) {
+        if (version == null || version.isEmpty()) return 0;
+        // Examples: "21.0.10", "1.8.0_211"
+        try {
+            if (version.startsWith("1.")) {
+                String[] parts = version.split("\\.");
+                if (parts.length >= 2) return Integer.parseInt(parts[1]);
+            } else {
+                String[] parts = version.split("\\.");
+                return Integer.parseInt(parts[0]);
+            }
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+        return 0;
     }
 }
