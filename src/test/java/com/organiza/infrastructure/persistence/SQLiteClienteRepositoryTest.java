@@ -12,7 +12,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ClienteRepositoryTest {
+class SQLiteClienteRepositoryTest {
 
     private SQLiteConnection db;
     private SQLiteClienteRepository repo;

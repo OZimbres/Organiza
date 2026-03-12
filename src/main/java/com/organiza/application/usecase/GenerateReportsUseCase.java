@@ -1,11 +1,10 @@
 package com.organiza.application.usecase;
 
+import com.organiza.domain.entity.ItemPedido;
 import com.organiza.domain.entity.Pedido;
 import com.organiza.domain.enums.StatusPedido;
 import com.organiza.domain.repository.PedidoRepositoryPort;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +51,7 @@ public class GenerateReportsUseCase {
                 .flatMap(p -> p.getItens().stream())
                 .collect(Collectors.groupingBy(
                         item -> item.getProduto(),
-                        Collectors.summingInt(item -> item.getQuantidade())
+                        Collectors.summingInt(ItemPedido::getQuantidade)
                 ));
     }
 

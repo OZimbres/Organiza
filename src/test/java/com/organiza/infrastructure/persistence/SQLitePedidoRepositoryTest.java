@@ -14,7 +14,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PedidoRepositoryTest {
+class SQLitePedidoRepositoryTest {
 
     private SQLiteConnection db;
     private SQLiteMesaRepository mesaRepository;

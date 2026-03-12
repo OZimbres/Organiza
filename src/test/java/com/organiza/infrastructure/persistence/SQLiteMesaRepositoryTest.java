@@ -3,7 +3,6 @@ package com.organiza.infrastructure.persistence;
 import com.organiza.infrastructure.persistence.sqlite.SQLiteConnection;
 import com.organiza.infrastructure.persistence.sqlite.SQLiteMesaRepository;
 
-import com.organiza.infrastructure.persistence.sqlite.SQLiteConnection;
 import com.organiza.domain.entity.Mesa;
 import com.organiza.domain.enums.StatusMesa;
 import org.junit.jupiter.api.*;
