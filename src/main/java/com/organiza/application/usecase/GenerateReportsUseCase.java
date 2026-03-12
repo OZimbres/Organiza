@@ -2,6 +2,7 @@ package com.organiza.application.usecase;
 
 import com.organiza.domain.entity.ItemPedido;
 import com.organiza.domain.entity.Pedido;
+import com.organiza.domain.entity.Report;
 import com.organiza.domain.enums.StatusPedido;
 import com.organiza.domain.repository.PedidoRepositoryPort;
 
@@ -69,5 +70,18 @@ public class GenerateReportsUseCase {
      */
     public int contarPedidosAtivos() {
         return pedidoRepository.findAllActive().size();
+    }
+
+    /**
+     * Gera um relatório completo com todas as métricas agregadas.
+     */
+    public Report gerarRelatorio() {
+        return new Report(
+                calcularReceitaTotal(),
+                contarPedidosPorStatus(),
+                itensMaisVendidos(),
+                estatisticasReceita(),
+                contarPedidosAtivos()
+        );
     }
 }
