@@ -3,15 +3,17 @@ package com.organiza.infrastructure.persistence.sqlite;
 import com.organiza.domain.entity.Mesa;
 import com.organiza.domain.enums.StatusMesa;
 
+import com.organiza.domain.repository.MesaRepositoryPort;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Repositório para operações de CRUD da entidade Mesa.
+ * Implementação SQLite do repositório de mesas.
  */
-public class SQLiteMesaRepository {
+public class SQLiteMesaRepository implements MesaRepositoryPort {
 
     private final SQLiteConnection databaseConnection;
 

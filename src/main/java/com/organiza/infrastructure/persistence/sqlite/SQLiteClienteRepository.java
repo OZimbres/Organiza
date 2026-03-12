@@ -2,15 +2,17 @@ package com.organiza.infrastructure.persistence.sqlite;
 
 import com.organiza.domain.entity.Cliente;
 
+import com.organiza.domain.repository.ClienteRepositoryPort;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Acesso a dados da tabela {@code clientes}.
+ * Implementação SQLite do repositório de clientes.
  */
-public class SQLiteClienteRepository {
+public class SQLiteClienteRepository implements ClienteRepositoryPort {
 
     private final SQLiteConnection db;
 

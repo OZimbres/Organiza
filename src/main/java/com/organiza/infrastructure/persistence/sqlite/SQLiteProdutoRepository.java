@@ -2,15 +2,17 @@ package com.organiza.infrastructure.persistence.sqlite;
 
 import com.organiza.domain.entity.Produto;
 
+import com.organiza.domain.repository.ProdutoRepositoryPort;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Acesso a dados da tabela {@code produtos}.
+ * Implementação SQLite do repositório de produtos.
  */
-public class SQLiteProdutoRepository {
+public class SQLiteProdutoRepository implements ProdutoRepositoryPort {
 
     private final SQLiteConnection db;
 

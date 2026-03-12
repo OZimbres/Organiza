@@ -4,6 +4,8 @@ import com.organiza.domain.entity.ItemPedido;
 import com.organiza.domain.entity.Pedido;
 import com.organiza.domain.enums.StatusPedido;
 
+import com.organiza.domain.repository.PedidoRepositoryPort;
+
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,9 +14,9 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repositório para operações de CRUD da entidade Pedido e seus itens.
+ * Implementação SQLite do repositório de pedidos.
  */
-public class SQLitePedidoRepository {
+public class SQLitePedidoRepository implements PedidoRepositoryPort {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final SQLiteConnection databaseConnection;
