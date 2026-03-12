@@ -1,7 +1,7 @@
 package com.organiza.ui;
 
-import com.organiza.model.Cliente;
-import com.organiza.service.ClienteService;
+import com.organiza.domain.entity.Cliente;
+import com.organiza.application.usecase.ClienteService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

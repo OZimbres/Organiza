@@ -1,13 +1,13 @@
 package com.organiza;
 
-import com.organiza.database.DatabaseConnection;
-import com.organiza.repository.ClienteRepository;
-import com.organiza.repository.MesaRepository;
-import com.organiza.repository.PedidoRepository;
-import com.organiza.repository.ProdutoRepository;
-import com.organiza.service.ClienteService;
-import com.organiza.service.PedidoService;
-import com.organiza.service.ProdutoService;
+import com.organiza.infrastructure.persistence.sqlite.SQLiteConnection;
+import com.organiza.infrastructure.persistence.sqlite.SQLiteClienteRepository;
+import com.organiza.infrastructure.persistence.sqlite.SQLiteMesaRepository;
+import com.organiza.infrastructure.persistence.sqlite.SQLitePedidoRepository;
+import com.organiza.infrastructure.persistence.sqlite.SQLiteProdutoRepository;
+import com.organiza.application.usecase.ClienteService;
+import com.organiza.application.usecase.PedidoService;
+import com.organiza.application.usecase.ProdutoService;
 import com.organiza.ui.AppShell;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -23,7 +23,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        DatabaseConnection db = new DatabaseConnection();
+        SQLiteConnection db = new SQLiteConnection();
         try {
             db.initializeDatabase();
         } catch (RuntimeException e) {
@@ -41,10 +41,10 @@ public class App extends Application {
             return;
         }
 
-        MesaRepository    mesaRepo    = new MesaRepository(db);
-        PedidoRepository  pedidoRepo  = new PedidoRepository(db);
-        ClienteRepository clienteRepo = new ClienteRepository(db);
-        ProdutoRepository produtoRepo = new ProdutoRepository(db);
+        SQLiteMesaRepository    mesaRepo    = new SQLiteMesaRepository(db);
+        SQLitePedidoRepository  pedidoRepo  = new SQLitePedidoRepository(db);
+        SQLiteClienteRepository clienteRepo = new SQLiteClienteRepository(db);
+        SQLiteProdutoRepository produtoRepo = new SQLiteProdutoRepository(db);
 
         PedidoService  pedidoService  = new PedidoService(mesaRepo, pedidoRepo);
         ClienteService clienteService = new ClienteService(clienteRepo);

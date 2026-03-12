@@ -1,7 +1,8 @@
 package com.organiza.ui;
 
-import com.organiza.model.*;
-import com.organiza.service.PedidoService;
+import com.organiza.domain.entity.*;
+import com.organiza.domain.enums.*;
+import com.organiza.application.usecase.PedidoService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;

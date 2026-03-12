@@ -1,8 +1,8 @@
 package com.organiza.ui;
 
-import com.organiza.service.ClienteService;
-import com.organiza.service.PedidoService;
-import com.organiza.service.ProdutoService;
+import com.organiza.application.usecase.ClienteService;
+import com.organiza.application.usecase.PedidoService;
+import com.organiza.application.usecase.ProdutoService;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
