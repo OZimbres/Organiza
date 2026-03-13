@@ -4,7 +4,6 @@ import com.organiza.domain.enums.StatusPedido;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.DoubleSummaryStatistics;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,9 +17,7 @@ class ReportTest {
                 StatusPedido.PAGO, 5L
         );
         Map<String, Integer> topItens = Map.of("Café", 10, "Pão", 8);
-        DoubleSummaryStatistics stats = new DoubleSummaryStatistics();
-        stats.accept(25.0);
-        stats.accept(30.0);
+        RevenueStatistics stats = new RevenueStatistics(2, 25.0, 30.0, 55.0);
 
         Report report = new Report(150.0, porStatus, topItens, stats, 3);
 
@@ -30,6 +27,11 @@ class ReportTest {
         assertEquals(2, report.getItensMaisVendidos().size());
         assertEquals(10, report.getItensMaisVendidos().get("Café"));
         assertNotNull(report.getEstatisticas());
+        assertEquals(2, report.getEstatisticas().count());
+        assertEquals(25.0, report.getEstatisticas().min(), 0.001);
+        assertEquals(30.0, report.getEstatisticas().max(), 0.001);
+        assertEquals(55.0, report.getEstatisticas().sum(), 0.001);
+        assertEquals(27.5, report.getEstatisticas().average(), 0.001);
         assertEquals(2, report.getPedidosPorStatus().size());
     }
 
@@ -63,12 +65,26 @@ class ReportTest {
     void deveSerIgualComMesmosDados() {
         Map<StatusPedido, Long> porStatus = Map.of(StatusPedido.PAGO, 5L);
         Map<String, Integer> topItens = Map.of("Café", 10);
+        RevenueStatistics stats = new RevenueStatistics(5, 10.0, 50.0, 200.0);
 
-        Report r1 = new Report(100.0, porStatus, topItens, null, 2);
-        Report r2 = new Report(100.0, porStatus, topItens, null, 2);
+        Report r1 = new Report(100.0, porStatus, topItens, stats, 2);
+        Report r2 = new Report(100.0, porStatus, topItens, stats, 2);
 
         assertEquals(r1, r2);
         assertEquals(r1.hashCode(), r2.hashCode());
+    }
+
+    @Test
+    void deveSerDiferenteComEstatisticasDiferentes() {
+        Map<StatusPedido, Long> porStatus = Map.of(StatusPedido.PAGO, 5L);
+        Map<String, Integer> topItens = Map.of("Café", 10);
+        RevenueStatistics stats1 = new RevenueStatistics(5, 10.0, 50.0, 200.0);
+        RevenueStatistics stats2 = new RevenueStatistics(3, 5.0, 100.0, 300.0);
+
+        Report r1 = new Report(100.0, porStatus, topItens, stats1, 2);
+        Report r2 = new Report(100.0, porStatus, topItens, stats2, 2);
+
+        assertNotEquals(r1, r2);
     }
 
     @Test

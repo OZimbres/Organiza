@@ -3,6 +3,7 @@ package com.organiza.application.usecase;
 import com.organiza.domain.entity.ItemPedido;
 import com.organiza.domain.entity.Pedido;
 import com.organiza.domain.entity.Report;
+import com.organiza.domain.entity.RevenueStatistics;
 import com.organiza.domain.enums.StatusPedido;
 import com.organiza.domain.repository.PedidoRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,12 +13,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class GenerateReportsUseCaseTest {
@@ -102,12 +102,22 @@ class GenerateReportsUseCaseTest {
         Pedido p2 = criarPedido(2, StatusPedido.PAGO, "Pão", 1, 10.00);
         when(pedidoRepository.findByStatus(StatusPedido.PAGO)).thenReturn(List.of(p1, p2));
 
-        DoubleSummaryStatistics stats = useCase.estatisticasReceita();
+        RevenueStatistics stats = useCase.estatisticasReceita();
 
-        assertEquals(2, stats.getCount());
-        assertEquals(10.0, stats.getMin(), 0.001);
-        assertEquals(10.0, stats.getMax(), 0.001);
-        assertEquals(10.0, stats.getAverage(), 0.001);
+        assertEquals(2, stats.count());
+        assertEquals(10.0, stats.min(), 0.001);
+        assertEquals(10.0, stats.max(), 0.001);
+        assertEquals(10.0, stats.average(), 0.001);
+    }
+
+    @Test
+    void deveRetornarEstatisticasVaziasSemPedidos() {
+        when(pedidoRepository.findByStatus(StatusPedido.PAGO)).thenReturn(List.of());
+
+        RevenueStatistics stats = useCase.estatisticasReceita();
+
+        assertEquals(0, stats.count());
+        assertEquals(0.0, stats.average(), 0.001);
     }
 
     @Test
@@ -155,6 +165,24 @@ class GenerateReportsUseCaseTest {
         assertEquals(1, report.getPedidosPorStatus().get(StatusPedido.PAGO));
         assertEquals(1, report.getPedidosPorStatus().get(StatusPedido.PENDENTE));
         assertEquals(2, report.getItensMaisVendidos().get("Café"));
+        assertNotNull(report.getEstatisticas());
+        assertEquals(1, report.getEstatisticas().count());
+        assertEquals(10.0, report.getEstatisticas().sum(), 0.001);
+    }
+
+    @Test
+    void gerarRelatorioDeveBuscarPedidosPagosUmaUnicaVez() {
+        when(pedidoRepository.findByStatus(StatusPedido.PAGO)).thenReturn(List.of());
+        when(pedidoRepository.findByStatus(StatusPedido.PENDENTE)).thenReturn(List.of());
+        when(pedidoRepository.findByStatus(StatusPedido.EM_PREPARO)).thenReturn(List.of());
+        when(pedidoRepository.findByStatus(StatusPedido.PRONTO)).thenReturn(List.of());
+        when(pedidoRepository.findByStatus(StatusPedido.ENTREGUE)).thenReturn(List.of());
+        when(pedidoRepository.findAllActive()).thenReturn(List.of());
+
+        useCase.gerarRelatorio();
+
+        // Paid orders should be fetched only once (optimized), others once each
+        verify(pedidoRepository, times(1)).findByStatus(StatusPedido.PAGO);
     }
 
     private Pedido criarPedido(int id, StatusPedido status, String produto, int qtd, double preco) {

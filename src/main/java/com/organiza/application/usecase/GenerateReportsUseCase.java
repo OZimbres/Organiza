@@ -3,6 +3,7 @@ package com.organiza.application.usecase;
 import com.organiza.domain.entity.ItemPedido;
 import com.organiza.domain.entity.Pedido;
 import com.organiza.domain.entity.Report;
+import com.organiza.domain.entity.RevenueStatistics;
 import com.organiza.domain.enums.StatusPedido;
 import com.organiza.domain.repository.PedidoRepositoryPort;
 
@@ -48,21 +49,14 @@ public class GenerateReportsUseCase {
      */
     public Map<String, Integer> itensMaisVendidos() {
         List<Pedido> todosPedidos = pedidoRepository.findByStatus(StatusPedido.PAGO);
-        return todosPedidos.stream()
-                .flatMap(p -> p.getItens().stream())
-                .collect(Collectors.groupingBy(
-                        item -> item.getProduto(),
-                        Collectors.summingInt(ItemPedido::getQuantidade)
-                ));
+        return itensMaisVendidos(todosPedidos);
     }
 
     /**
-     * Retorna estatísticas de receita (min, max, avg, count).
+     * Retorna estatísticas de receita (min, max, avg, count) como snapshot imutável.
      */
-    public DoubleSummaryStatistics estatisticasReceita() {
-        return pedidoRepository.findByStatus(StatusPedido.PAGO).stream()
-                .mapToDouble(Pedido::getTotal)
-                .summaryStatistics();
+    public RevenueStatistics estatisticasReceita() {
+        return estatisticasReceita(pedidoRepository.findByStatus(StatusPedido.PAGO));
     }
 
     /**
@@ -74,14 +68,45 @@ public class GenerateReportsUseCase {
 
     /**
      * Gera um relatório completo com todas as métricas agregadas.
+     * Busca pedidos pagos uma única vez e reutiliza para receita, itens e estatísticas,
+     * evitando consultas redundantes ao repositório.
      */
     public Report gerarRelatorio() {
-        return new Report(
-                calcularReceitaTotal(),
-                contarPedidosPorStatus(),
-                itensMaisVendidos(),
-                estatisticasReceita(),
-                contarPedidosAtivos()
-        );
+        List<Pedido> pedidosPagos = pedidoRepository.findByStatus(StatusPedido.PAGO);
+
+        double receita = pedidosPagos.stream().mapToDouble(Pedido::getTotal).sum();
+
+        Map<StatusPedido, Long> porStatus = new java.util.EnumMap<>(StatusPedido.class);
+        porStatus.put(StatusPedido.PAGO, (long) pedidosPagos.size());
+        for (StatusPedido status : StatusPedido.values()) {
+            if (status != StatusPedido.PAGO) {
+                porStatus.put(status, (long) pedidoRepository.findByStatus(status).size());
+            }
+        }
+
+        Map<String, Integer> topItens = itensMaisVendidos(pedidosPagos);
+        RevenueStatistics stats = estatisticasReceita(pedidosPagos);
+        int ativos = pedidoRepository.findAllActive().size();
+
+        return new Report(receita, porStatus, topItens, stats, ativos);
+    }
+
+    private Map<String, Integer> itensMaisVendidos(List<Pedido> pedidosPagos) {
+        return pedidosPagos.stream()
+                .flatMap(p -> p.getItens().stream())
+                .collect(Collectors.groupingBy(
+                        item -> item.getProduto(),
+                        Collectors.summingInt(ItemPedido::getQuantidade)
+                ));
+    }
+
+    private RevenueStatistics estatisticasReceita(List<Pedido> pedidosPagos) {
+        DoubleSummaryStatistics dss = pedidosPagos.stream()
+                .mapToDouble(Pedido::getTotal)
+                .summaryStatistics();
+        if (dss.getCount() == 0) {
+            return RevenueStatistics.empty();
+        }
+        return new RevenueStatistics(dss.getCount(), dss.getMin(), dss.getMax(), dss.getSum());
     }
 }

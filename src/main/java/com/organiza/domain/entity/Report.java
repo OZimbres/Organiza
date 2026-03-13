@@ -2,7 +2,6 @@ package com.organiza.domain.entity;
 
 import com.organiza.domain.enums.StatusPedido;
 
-import java.util.DoubleSummaryStatistics;
 import java.util.Map;
 import java.util.Objects;
 
@@ -16,13 +15,13 @@ public class Report {
     private final double receitaTotal;
     private final Map<StatusPedido, Long> pedidosPorStatus;
     private final Map<String, Integer> itensMaisVendidos;
-    private final DoubleSummaryStatistics estatisticas;
+    private final RevenueStatistics estatisticas;
     private final int pedidosAtivos;
 
     public Report(double receitaTotal,
                   Map<StatusPedido, Long> pedidosPorStatus,
                   Map<String, Integer> itensMaisVendidos,
-                  DoubleSummaryStatistics estatisticas,
+                  RevenueStatistics estatisticas,
                   int pedidosAtivos) {
         this.receitaTotal = receitaTotal;
         this.pedidosPorStatus = pedidosPorStatus != null ? Map.copyOf(pedidosPorStatus) : Map.of();
@@ -43,7 +42,7 @@ public class Report {
         return itensMaisVendidos;
     }
 
-    public DoubleSummaryStatistics getEstatisticas() {
+    public RevenueStatistics getEstatisticas() {
         return estatisticas;
     }
 
@@ -66,12 +65,13 @@ public class Report {
         return Double.compare(report.receitaTotal, receitaTotal) == 0
                 && pedidosAtivos == report.pedidosAtivos
                 && Objects.equals(pedidosPorStatus, report.pedidosPorStatus)
-                && Objects.equals(itensMaisVendidos, report.itensMaisVendidos);
+                && Objects.equals(itensMaisVendidos, report.itensMaisVendidos)
+                && Objects.equals(estatisticas, report.estatisticas);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(receitaTotal, pedidosPorStatus, itensMaisVendidos, pedidosAtivos);
+        return Objects.hash(receitaTotal, pedidosPorStatus, itensMaisVendidos, estatisticas, pedidosAtivos);
     }
 
     @Override

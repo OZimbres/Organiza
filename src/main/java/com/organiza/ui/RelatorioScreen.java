@@ -2,7 +2,10 @@ package com.organiza.ui;
 
 import com.organiza.application.usecase.GenerateReportsUseCase;
 import com.organiza.domain.entity.Report;
+import com.organiza.domain.entity.RevenueStatistics;
 import com.organiza.domain.enums.StatusPedido;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -14,12 +17,12 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.util.DoubleSummaryStatistics;
 import java.util.Map;
 
 /**
  * Tela de relatórios e analytics — exibe receita, contagens de pedidos,
  * itens mais vendidos e estatísticas gerais.
+ * A geração de relatórios é feita em background para não travar a UI.
  */
 public class RelatorioScreen {
 
@@ -67,25 +70,9 @@ public class RelatorioScreen {
 
         content.getChildren().add(header);
 
-        Report report = gerarRelatorio();
-        content.getChildren().addAll(
-                criarResumoCards(report),
-                criarPedidosPorStatus(report),
-                criarItensMaisVendidos(report),
-                criarEstatisticas(report)
-        );
+        loadReportAsync(content, header, btnRefresh);
 
-        btnRefresh.setOnAction(e -> {
-            content.getChildren().clear();
-            content.getChildren().add(header);
-            Report r = gerarRelatorio();
-            content.getChildren().addAll(
-                    criarResumoCards(r),
-                    criarPedidosPorStatus(r),
-                    criarItensMaisVendidos(r),
-                    criarEstatisticas(r)
-            );
-        });
+        btnRefresh.setOnAction(e -> loadReportAsync(content, header, btnRefresh));
 
         ScrollPane scroll = new ScrollPane(content);
         scroll.setFitToWidth(true);
@@ -102,8 +89,59 @@ public class RelatorioScreen {
         return scene;
     }
 
-    Report gerarRelatorio() {
-        return reportsUseCase.gerarRelatorio();
+    /**
+     * Carrega o relatório em background (Thread separada) e atualiza a UI
+     * no JavaFX Application Thread quando pronto.
+     */
+    private void loadReportAsync(VBox content, HBox header, Button btnRefresh) {
+        btnRefresh.setDisable(true);
+
+        content.getChildren().clear();
+        content.getChildren().add(header);
+
+        Label lblLoading = new Label("⏳  Carregando relatório...");
+        lblLoading.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        lblLoading.setTextFill(Color.web(DIM));
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setMaxSize(40, 40);
+        VBox loadingBox = new VBox(12, spinner, lblLoading);
+        loadingBox.setAlignment(Pos.CENTER);
+        loadingBox.setPadding(new Insets(40));
+        content.getChildren().add(loadingBox);
+
+        Task<Report> task = new Task<>() {
+            @Override
+            protected Report call() {
+                return reportsUseCase.gerarRelatorio();
+            }
+        };
+
+        task.setOnSucceeded(e -> Platform.runLater(() -> {
+            Report report = task.getValue();
+            content.getChildren().clear();
+            content.getChildren().add(header);
+            content.getChildren().addAll(
+                    criarResumoCards(report),
+                    criarPedidosPorStatus(report),
+                    criarItensMaisVendidos(report),
+                    criarEstatisticas(report)
+            );
+            btnRefresh.setDisable(false);
+        }));
+
+        task.setOnFailed(e -> Platform.runLater(() -> {
+            content.getChildren().clear();
+            content.getChildren().add(header);
+            Label lblErro = new Label("❌  Erro ao carregar relatório.");
+            lblErro.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+            lblErro.setTextFill(Color.web("#EF4444"));
+            content.getChildren().add(lblErro);
+            btnRefresh.setDisable(false);
+        }));
+
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private HBox criarResumoCards(Report report) {
@@ -210,20 +248,20 @@ public class RelatorioScreen {
         VBox list = new VBox(6);
         list.setPadding(new Insets(8, 14, 8, 14));
 
-        DoubleSummaryStatistics stats = report.getEstatisticas();
+        RevenueStatistics stats = report.getEstatisticas();
 
-        if (stats == null || stats.getCount() == 0) {
+        if (stats == null || stats.count() == 0) {
             Label lblVazio = new Label("Sem dados estatísticos disponíveis.");
             lblVazio.setFont(Font.font("Arial", 13));
             lblVazio.setTextFill(Color.web(DIM));
             list.getChildren().add(lblVazio);
         } else {
             list.getChildren().addAll(
-                    statRow("Pedidos pagos", String.valueOf(stats.getCount())),
-                    statRow("Menor valor", String.format("R$ %.2f", stats.getMin())),
-                    statRow("Maior valor", String.format("R$ %.2f", stats.getMax())),
-                    statRow("Valor médio", String.format("R$ %.2f", stats.getAverage())),
-                    statRow("Total", String.format("R$ %.2f", stats.getSum()))
+                    statRow("Pedidos pagos", String.valueOf(stats.count())),
+                    statRow("Menor valor", String.format("R$ %.2f", stats.min())),
+                    statRow("Maior valor", String.format("R$ %.2f", stats.max())),
+                    statRow("Valor médio", String.format("R$ %.2f", stats.average())),
+                    statRow("Total", String.format("R$ %.2f", stats.sum()))
             );
         }
 
