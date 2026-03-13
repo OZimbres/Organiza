@@ -6,6 +6,7 @@ import com.organiza.infrastructure.persistence.sqlite.SQLiteMesaRepository;
 import com.organiza.infrastructure.persistence.sqlite.SQLitePedidoRepository;
 import com.organiza.infrastructure.persistence.sqlite.SQLiteProdutoRepository;
 import com.organiza.application.usecase.ClienteService;
+import com.organiza.application.usecase.GenerateReportsUseCase;
 import com.organiza.application.usecase.PedidoService;
 import com.organiza.application.usecase.ProdutoService;
 import com.organiza.ui.AppShell;
@@ -49,10 +50,11 @@ public class App extends Application {
         PedidoService  pedidoService  = new PedidoService(mesaRepo, pedidoRepo);
         ClienteService clienteService = new ClienteService(clienteRepo);
         ProdutoService produtoService = new ProdutoService(produtoRepo);
+        GenerateReportsUseCase reportsUseCase = new GenerateReportsUseCase(pedidoRepo);
 
         pedidoService.criarMesas(TOTAL_MESAS);
 
-        AppShell appShell = new AppShell(pedidoService, clienteService, produtoService);
+        AppShell appShell = new AppShell(pedidoService, clienteService, produtoService, reportsUseCase);
         primaryStage.setTitle("Organiza - Gestão de Pedidos");
         primaryStage.setScene(appShell.createScene(primaryStage));
         primaryStage.show();

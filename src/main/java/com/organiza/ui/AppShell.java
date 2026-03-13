@@ -1,6 +1,7 @@
 package com.organiza.ui;
 
 import com.organiza.application.usecase.ClienteService;
+import com.organiza.application.usecase.GenerateReportsUseCase;
 import com.organiza.application.usecase.PedidoService;
 import com.organiza.application.usecase.ProdutoService;
 import javafx.animation.Animation;
@@ -31,6 +32,7 @@ public class AppShell {
     private final PedidoService  pedidoService;
     private final ClienteService clienteService;
     private final ProdutoService produtoService;
+    private final GenerateReportsUseCase reportsUseCase;
 
     private Stage         primaryStage;
     private MainScreen    mainScreen;
@@ -40,10 +42,12 @@ public class AppShell {
 
     public AppShell(PedidoService pedidoService,
                     ClienteService clienteService,
-                    ProdutoService produtoService) {
+                    ProdutoService produtoService,
+                    GenerateReportsUseCase reportsUseCase) {
         this.pedidoService  = pedidoService;
         this.clienteService = clienteService;
         this.produtoService = produtoService;
+        this.reportsUseCase = reportsUseCase;
     }
 
     public Scene createScene(Stage stage) {
@@ -63,8 +67,9 @@ public class AppShell {
         lblKitchenBadge.setFont(Font.font("Arial", 13));
         lblKitchenBadge.setTextFill(Color.web("#8888AA"));
 
-        Button btnClientes = toolbarButton("👤  Clientes");
-        Button btnProdutos = toolbarButton("🛒  Produtos");
+        Button btnClientes    = toolbarButton("👤  Clientes");
+        Button btnProdutos    = toolbarButton("🛒  Produtos");
+        Button btnRelatorios  = toolbarButton("📊  Relatórios");
 
         btnClientes.setOnAction(e -> new ClienteScreen(clienteService).show(primaryStage));
         btnProdutos.setOnAction(e -> {
@@ -74,11 +79,12 @@ public class AppShell {
                 if (isF) pedidoScreen.refreshPickers();
             });
         });
+        btnRelatorios.setOnAction(e -> new RelatorioScreen(reportsUseCase).show(primaryStage));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox toolbar = new HBox(16, lblLogo, spacer, lblKitchenBadge, btnClientes, btnProdutos);
+        HBox toolbar = new HBox(16, lblLogo, spacer, lblKitchenBadge, btnClientes, btnProdutos, btnRelatorios);
         toolbar.setAlignment(Pos.CENTER_LEFT);
         toolbar.setPadding(new Insets(10, 18, 10, 18));
         toolbar.setStyle("-fx-background-color: " + BG_TOOLBAR + ";");
