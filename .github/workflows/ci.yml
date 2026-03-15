@@ -33,10 +33,5 @@ jobs:
         if: runner.os != 'Windows'
         run: chmod +x ./gradlew
 
-      - name: Build
-        run: |
-          ./gradlew build --no-daemon --warning-mode all
-
-      - name: Run tests
-        run: |
-          ./gradlew test --no-daemon --warning-mode all
+      - name: Build and Test
+        run: ./gradlew build --no-daemon --warning-mode all

@@ -37,7 +37,7 @@ jobs:
 
       - name: Determine JAR path
         id: jar
-        run: echo "path=$(ls build/libs/organiza-*.jar | head -1)" >> "$GITHUB_OUTPUT"
+        run: echo "path=$(ls build/libs/organiza-*-all.jar | head -1)" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -51,8 +51,8 @@ jobs:
             ## Organiza ${{ github.ref_name }}
 
             ### Download
-            Baixe o arquivo `organiza-*.jar` abaixo e execute com:
+            Baixe o arquivo `organiza-*-all.jar` abaixo e execute com:
             ```
-            java -jar organiza-*.jar
+            java -jar organiza-*-all.jar
             ```
             > **Requisito:** Java 21 ou superior (Linux x86_64). Este JAR já inclui todas as dependências (JavaFX, SQLite).
