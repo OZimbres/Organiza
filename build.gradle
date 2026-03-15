@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'com.organiza'
@@ -34,9 +35,23 @@ dependencies {
 }
 
 application {
-    mainClass = 'com.organiza.App'
+    mainClass = 'com.organiza.Launcher'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+shadowJar {
+    archiveBaseName.set('organiza')
+    archiveClassifier.set('')
+    archiveVersion.set(project.version.toString())
+    mergeServiceFiles()
+}
+
+tasks.register('copyJarToVersao', Copy) {
+    dependsOn shadowJar
+    from shadowJar.archiveFile
+    into layout.projectDirectory.dir('versão')
+    rename { 'organiza.jar' }
 }
