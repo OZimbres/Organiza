@@ -44,7 +44,7 @@ tasks.named('test') {
 
 shadowJar {
     archiveBaseName.set('organiza')
-    archiveClassifier.set('')
+    archiveClassifier.set('all')
     archiveVersion.set(project.version.toString())
     mergeServiceFiles()
 }
